@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X-0 Arena | 3 Roundlik Jang</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient background glow lights -->
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+  <div class="glow-orb orb-3"></div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <main class="game-container">
+    <!-- Header / Top Bar -->
+    <header class="game-header">
+      <div class="brand">
+        <h1 class="logo-text">TIC TAC <span class="accent-text">TOE</span></h1>
+        <p class="subtitle">3 ROUNDLIK CHEMPIONAT</p>
+      </div>
+
+      <div class="header-controls">
+        <button id="stats-modal-btn" class="icon-btn" title="Statistika va Yutuqlar" aria-label="Statistika">
+          <span style="font-size: 1.1rem;">🏆</span>
+        </button>
+
+        <button id="theme-modal-btn" class="icon-btn" title="Rang mavzularini tanlash (Neon Skins)" aria-label="Mavzular">
+          <span style="font-size: 1.1rem;">🎨</span>
+        </button>
+
+        <button id="symbols-modal-btn" class="icon-btn" title="Ramzlar to'plamini tanlash" aria-label="Ramzlar">
+          <span style="font-size: 1.1rem;">🎭</span>
+        </button>
+
+        <button id="about-creator-btn" class="icon-btn" title="Muallif haqida" aria-label="Muallif haqida">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+          </svg>
+        </button>
+
+        <button id="sound-toggle-btn" class="icon-btn" title="Ovozni yoqish / o'chirish" aria-label="Ovoz sozlamasi">
+          <svg id="sound-icon-on" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-2.5-1.23L6.5 6.5H2v11h4.5l5 4.5V2zM14 8.5v7c1.48-.73 2.5-2.25 2.5-3.5S15.48 9.23 14 8.5z"/>
+          </svg>
+          <svg id="sound-icon-off" class="hidden" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+          </svg>
+        </button>
+
+        <button id="reset-match-btn" class="icon-btn" title="O'yinni qayta boshlash" aria-label="Qayta boshlash">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Mode & Difficulty Switcher -->
+    <section class="game-modes-section">
+      <!-- Opponent Mode Selector -->
+      <div class="mode-toggle-group" title="Raqibni tanlang">
+        <button class="mode-btn active" id="mode-pvp-btn">
+          <span class="mode-icon">👥</span>
+          <span>2 O'yinchi</span>
+        </button>
+        <button class="mode-btn" id="mode-ai-btn">
+          <span class="mode-icon">🤖</span>
+          <span>AI Bot</span>
+        </button>
+      </div>
+
+      <!-- Difficulty Selector (Only visible in AI mode) -->
+      <div class="difficulty-group hidden" id="difficulty-group">
+        <button class="diff-btn active" data-diff="easy" id="diff-easy-btn">🟢 Oson</button>
+        <button class="diff-btn" data-diff="hard" id="diff-hard-btn">🔴 Yengilmas</button>
+      </div>
+
+      <!-- Game Rule Selector (Classic vs Infinite Disappearing) -->
+      <div class="mode-toggle-group rule-toggle-group" title="O'yin qoidasini tanlang">
+        <button class="mode-btn active" id="rule-classic-btn" title="Klassik 3x3 Tic Tac Toe">
+          <span class="mode-icon">⚔️</span>
+          <span>Klassik</span>
+        </button>
+        <button class="mode-btn" id="rule-infinite-btn" title="G'oyib bo'luvchi rejim (Doskada eng ko'pi bilan 3 ta belgi!)">
+          <span class="mode-icon">🔥</span>
+          <span>G'oyib bo'luvchi</span>
+        </button>
+      </div>
+
+      <!-- Speed Modifier (Blitz Timer) -->
+      <div class="modifiers-bar">
+        <button class="modifier-btn" id="toggle-blitz-btn" title="Har bir yurishga 5 soniya beriladi">
+          <span class="mod-icon">⏱️</span>
+          <span class="mod-text">Blitz Taymer (5s)</span>
+          <span class="mod-status" id="blitz-status">OFF</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Round Tracker Bar -->
+    <section class="round-tracker-container">
+      <div class="round-badge">
+        <span class="round-label">ROUND</span>
+        <span id="current-round-number" class="round-val">1</span>
+        <span class="round-total">/ 3</span>
+      </div>
+      <div class="round-progress-pills">
+        <div class="pill active" id="pill-1">1</div>
+        <div class="pill" id="pill-2">2</div>
+        <div class="pill" id="pill-3">3</div>
+      </div>
+    </section>
+
+    <!-- Scoreboard -->
+    <section class="scoreboard">
+      <!-- Player X -->
+      <div class="player-card active-turn" id="player-x-card">
+        <div class="player-avatar x-avatar">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </div>
+        <div class="player-details">
+          <div class="player-name-wrapper">
+            <input type="text" id="player-x-name" class="player-name-input" value="O'yinchi 1" maxlength="12" title="Ismni o'zgartirish uchun bosing">
+            <span class="symbol-tag tag-x">X</span>
+          </div>
+          <div class="turn-status">Navbatda</div>
+        </div>
+        <div class="player-score" id="score-x">0</div>
+        <!-- Power-ups for Player X -->
+        <div class="player-powerups">
+          <button class="powerup-btn" id="bomb-x-btn" title="Bomba: Raqib katagini portlatish (1 marta)">
+            <span>💣</span>
+          </button>
+          <button class="powerup-btn" id="skip-x-btn" title="Bloklash: Raqib navbatini o'tkazib yuborish (1 marta)">
+            <span>🛑</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- VS / Draws center badge -->
+      <div class="score-divider">
+        <span class="vs-text">VS</span>
+        <div class="draw-count-badge" title="Duranglar soni">
+          <span>Durang: </span><span id="score-draw">0</span>
+        </div>
+      </div>
+
+      <!-- Player O -->
+      <div class="player-card" id="player-o-card">
+        <div class="player-avatar o-avatar">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3.5">
+            <circle cx="12" cy="12" r="8"></circle>
+          </svg>
+        </div>
+        <div class="player-details">
+          <div class="player-name-wrapper">
+            <input type="text" id="player-o-name" class="player-name-input" value="O'yinchi 2" maxlength="12" title="Ismni o'zgartirish uchun bosing">
+            <span class="symbol-tag tag-o">O</span>
+          </div>
+          <div class="turn-status">Kutmoqda</div>
+        </div>
+        <div class="player-score" id="score-o">0</div>
+        <!-- Power-ups for Player O -->
+        <div class="player-powerups">
+          <button class="powerup-btn" id="bomb-o-btn" title="Bomba: Raqib katagini portlatish (1 marta)">
+            <span>💣</span>
+          </button>
+          <button class="powerup-btn" id="skip-o-btn" title="Bloklash: Raqib navbatini o'tkazib yuborish (1 marta)">
+            <span>🛑</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Blitz Countdown Bar (Only active when blitz is enabled) -->
+    <div class="blitz-timer-container hidden" id="blitz-timer-container">
+      <div class="blitz-header">
+        <span class="blitz-label">⚡ QOLGAN VAQT:</span>
+        <span class="blitz-time-text" id="blitz-time-text">5.0s</span>
+      </div>
+      <div class="blitz-track">
+        <div class="blitz-fill" id="blitz-fill"></div>
+      </div>
+    </div>
+
+    <!-- Infinite Mode Indicator Banner -->
+    <div class="infinite-mode-banner hidden" id="infinite-mode-banner">
+      <span class="banner-fire-icon">🔥</span>
+      <span><strong>G'oyib bo'luvchi rejim faol:</strong> Doskada har bir o'yinchida ko'pi bilan 3 ta belgi tura oladi. 4-belgi qo'yilganda, 1-belgi avtomatik o'chadi!</span>
+    </div>
+
+    <!-- Game Arena (Board) -->
+    <section class="arena-wrapper">
+      <div class="board" id="board">
+        <!-- 9 Interactive Cells -->
+        <button class="cell" data-index="0" aria-label="Katak 1"></button>
+        <button class="cell" data-index="1" aria-label="Katak 2"></button>
+        <button class="cell" data-index="2" aria-label="Katak 3"></button>
+        <button class="cell" data-index="3" aria-label="Katak 4"></button>
+        <button class="cell" data-index="4" aria-label="Katak 5"></button>
+        <button class="cell" data-index="5" aria-label="Katak 6"></button>
+        <button class="cell" data-index="6" aria-label="Katak 7"></button>
+        <button class="cell" data-index="7" aria-label="Katak 8"></button>
+        <button class="cell" data-index="8" aria-label="Katak 9"></button>
+
+        <!-- Strike Line for winning combos -->
+        <div class="strike-line" id="strike-line"></div>
+      </div>
+    </section>
+
+    <!-- Round Status Banner -->
+    <div class="round-status-banner" id="round-status-banner">
+      <div class="banner-content">
+        <span class="banner-icon" id="banner-icon">⚡</span>
+        <span class="banner-text" id="banner-text">O'yin boshlandi! X ning navbati.</span>
+      </div>
+    </div>
+
+    <!-- Creator Footer Info -->
+    <footer class="creator-footer" id="open-creator-modal-footer" title="Muallif haqida to'liq ma'lumot">
+      <div class="creator-badge">
+        <span class="creator-sparkle">✨</span>
+        <span class="creator-text">Muallif: <strong class="creator-highlight">Zeboxon</strong> • <span class="creator-school">Insight o'quv markazi</span></span>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Round End Modal / Overlay -->
+  <div class="modal-backdrop hidden" id="round-modal">
+    <div class="modal-card">
+      <div class="modal-glow-tag" id="round-modal-tag">ROUND YAKUNI</div>
+      <h2 class="modal-title" id="round-modal-title">1-Round G'olibi!</h2>
+      <p class="modal-desc" id="round-modal-desc">O'yinchi 1 ushbu roundda g'alaba qozondi!</p>
+      
+      <div class="round-summary-score">
+        <div class="summary-player">
+          <span class="name" id="summary-x-name">X</span>
+          <span class="score" id="summary-x-score">1</span>
+        </div>
+        <span class="colon">:</span>
+        <div class="summary-player">
+          <span class="name" id="summary-o-name">O</span>
+          <span class="score" id="summary-o-score">0</span>
+        </div>
+      </div>
+
+      <button id="next-round-btn" class="primary-btn glow-cyan">
+        <span>Keyingi Roundga O'tish</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Championship (Game Over) Grand Modal -->
+  <div class="modal-backdrop hidden" id="champion-modal">
+    <div class="modal-card champ-card">
+      <div class="trophy-container">
+        <div class="trophy-glow"></div>
+        <span class="trophy-emoji">🏆</span>
+      </div>
+      <div class="modal-glow-tag champ-tag">MUTLAQ G'OLIB!</div>
+      <h2 class="modal-title champ-title" id="champion-name">O'YINCHI 1</h2>
+      <p class="modal-desc" id="champion-desc">3 round natijasiga ko'ra seriya chempioni bo'ldi!</p>
+
+      <div class="final-score-box">
+        <div class="final-row">
+          <span class="f-name" id="final-x-name">O'yinchi 1</span>
+          <span class="f-score" id="final-x-score">2 ball</span>
+        </div>
+        <div class="final-divider"></div>
+        <div class="final-row">
+          <span class="f-name" id="final-o-name">O'yinchi 2</span>
+          <span class="f-score" id="final-o-score">1 ball</span>
+        </div>
+        <div class="final-draws" id="final-draws-text">Duranglar: 0</div>
+      </div>
+
+      <button id="new-match-btn" class="primary-btn glow-gold">
+        <span>Yangi 3 Roundlik O'yin</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Creator Info Modal -->
+  <div class="modal-backdrop hidden" id="creator-modal">
+    <div class="modal-card creator-modal-card">
+      <div class="creator-avatar-box">
+        <div class="creator-avatar-glow"></div>
+        <div class="creator-avatar-icon">👩‍💻</div>
+      </div>
+      <div class="modal-glow-tag creator-tag">LOYIHA MUALLIFI</div>
+      <h2 class="modal-title creator-name">ZEBOXON</h2>
+      <div class="creator-study-badge">
+        <span class="school-icon">🎓</span>
+        <span class="school-name">Insight o'quv markazi</span>
+      </div>
+      <p class="modal-desc creator-bio">
+        Ushbu zamonaviy va go'zal 3 roundlik <strong>X-0 (Tic-Tac-Toe)</strong> o'yini dasturchi <strong>Zeboxon</strong> tomonidan <strong>Insight o'quv markazida</strong> o'qish jarayonida yaratildi!
+      </p>
+      
+      <div class="creator-skills-chips">
+        <span class="chip">HTML5</span>
+        <span class="chip">CSS3 Neon UI</span>
+        <span class="chip">JavaScript</span>
+        <span class="chip">Web Audio API</span>
+      </div>
+
+      <button id="close-creator-btn" class="primary-btn glow-cyan">
+        <span>Ajoyib! O'yinga qaytish</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Theme Selection Modal -->
+  <div class="modal-backdrop hidden" id="theme-modal">
+    <div class="modal-card">
+      <div class="modal-glow-tag">DIZAYN AURALARI</div>
+      <h2 class="modal-title">Rang Mavzusi (Neon Skins)</h2>
+      <p class="modal-desc">O'yinning yorug'lik va nur uslubini o'zingizga moslang:</p>
+
+      <div class="theme-options-grid">
+        <button class="theme-card active" data-theme="cyberpunk">
+          <div class="theme-color-preview preview-cyberpunk"></div>
+          <span class="theme-title">Cyberpunk</span>
+          <span class="theme-sub">Siyan & Pushti</span>
+        </button>
+        <button class="theme-card" data-theme="matrix">
+          <div class="theme-color-preview preview-matrix"></div>
+          <span class="theme-title">Matrix</span>
+          <span class="theme-sub">Xaker Yashil</span>
+        </button>
+        <button class="theme-card" data-theme="lava">
+          <div class="theme-color-preview preview-lava"></div>
+          <span class="theme-title">Lava Flame</span>
+          <span class="theme-sub">Olovli Qizil</span>
+        </button>
+        <button class="theme-card" data-theme="galaxy">
+          <div class="theme-color-preview preview-galaxy"></div>
+          <span class="theme-title">Purple Galaxy</span>
+          <span class="theme-sub">Kosmik Binafsha</span>
+        </button>
+      </div>
+
+      <button id="close-theme-btn" class="primary-btn glow-cyan">
+        <span>Mavzuni Saqlash</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Symbols Selection Modal -->
+  <div class="modal-backdrop hidden" id="symbols-modal">
+    <div class="modal-card">
+      <div class="modal-glow-tag">QAHRAMONLAR JANGI</div>
+      <h2 class="modal-title">Ramzlar To'plami</h2>
+      <p class="modal-desc">O'yinchilar qaysi belgilar bilan to'qnashsin?</p>
+
+      <div class="symbols-options-grid">
+        <button class="symbol-card active" data-symbol-set="classic">
+          <div class="symbol-preview">
+            <span class="s-x">❌</span>
+            <span class="s-vs">VS</span>
+            <span class="s-o">⭕</span>
+          </div>
+          <span class="symbol-set-name">Klassik Neon</span>
+        </button>
+
+        <button class="symbol-card" data-symbol-set="fire_ice">
+          <div class="symbol-preview">
+            <span class="s-x">🔥</span>
+            <span class="s-vs">VS</span>
+            <span class="s-o">❄️</span>
+          </div>
+          <span class="symbol-set-name">Olov vs Muz</span>
+        </button>
+
+        <button class="symbol-card" data-symbol-set="thunder_skull">
+          <div class="symbol-preview">
+            <span class="s-x">⚡</span>
+            <span class="s-vs">VS</span>
+            <span class="s-o">💀</span>
+          </div>
+          <span class="symbol-set-name">Yashin vs Ritsar</span>
+        </button>
+
+        <button class="symbol-card" data-symbol-set="crown_diamond">
+          <div class="symbol-preview">
+            <span class="s-x">👑</span>
+            <span class="s-vs">VS</span>
+            <span class="s-o">💎</span>
+          </div>
+          <span class="symbol-set-name">Toj vs Olmos</span>
+        </button>
+
+        <button class="symbol-card" data-symbol-set="lion_tiger">
+          <div class="symbol-preview">
+            <span class="s-x">🦁</span>
+            <span class="s-vs">VS</span>
+            <span class="s-o">🐯</span>
+          </div>
+          <span class="symbol-set-name">Sher vs Yo'lbars</span>
+        </button>
+      </div>
+
+      <button id="close-symbols-btn" class="primary-btn glow-cyan">
+        <span>Ramzlarni Tanlash</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats & Achievements Modal -->
+  <div class="modal-backdrop hidden" id="stats-modal">
+    <div class="modal-card stats-modal-card">
+      <div class="modal-glow-tag">NATIJALAR & YUTUQLAR</div>
+      <h2 class="modal-title">O'yin Statistikasi</h2>
+
+      <!-- Numbers Grid -->
+      <div class="stats-overview-grid">
+        <div class="stat-box">
+          <span class="stat-number" id="stat-total-matches">0</span>
+          <span class="stat-label">O'yinlar</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number stat-cyan" id="stat-x-wins">0</span>
+          <span class="stat-label">X G'alabasi</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number stat-pink" id="stat-o-wins">0</span>
+          <span class="stat-label">O G'alabasi</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number stat-gold" id="stat-draws">0</span>
+          <span class="stat-label">Duranglar</span>
+        </div>
+      </div>
+
+      <!-- Achievements List -->
+      <div class="achievements-section">
+        <h3 class="achieve-heading">🏆 Faxriy Nishonlar</h3>
+        <div class="achievements-list">
+          <div class="achievement-item locked" id="achieve-first-win">
+            <div class="achieve-icon">🎖️</div>
+            <div class="achieve-info">
+              <span class="achieve-title">Birinchi G'alaba</span>
+              <span class="achieve-desc">Ilk marta o'yinda zafar quching</span>
+            </div>
+            <span class="achieve-badge-status">Qulflangan</span>
+          </div>
+
+          <div class="achievement-item locked" id="achieve-streak-3">
+            <div class="achieve-icon">🔥</div>
+            <div class="achieve-info">
+              <span class="achieve-title">Olovli Zanjir (3x)</span>
+              <span class="achieve-desc">Ketma-ket 3 ta matchda g'alaba qozoning</span>
+            </div>
+            <span class="achieve-badge-status">Qulflangan</span>
+          </div>
+
+          <div class="achievement-item locked" id="achieve-ai-slayer">
+            <div class="achieve-icon">🤖</div>
+            <div class="achieve-info">
+              <span class="achieve-title">Kiber Qotil</span>
+              <span class="achieve-desc">Yengilmas AI Bot bilan durang yoki g'alaba qiling</span>
+            </div>
+            <span class="achieve-badge-status">Qulflangan</span>
+          </div>
+
+          <div class="achievement-item locked" id="achieve-bomb-master">
+            <div class="achieve-icon">💣</div>
+            <div class="achieve-info">
+              <span class="achieve-title">Portlatuvchi</span>
+              <span class="achieve-desc">Bombadan foydalanib raqib belgisini yo'q qiling</span>
+            </div>
+            <span class="achieve-badge-status">Qulflangan</span>
+          </div>
+
+          <div class="achievement-item locked" id="achieve-blitz-master">
+            <div class="achieve-icon">⚡</div>
+            <div class="achieve-info">
+              <span class="achieve-title">Tezkor Yashin</span>
+              <span class="achieve-desc">Blitz (5s) rejimida to'liq matchda g'olib chiqing</span>
+            </div>
+            <span class="achieve-badge-status">Qulflangan</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-modal-actions">
+        <button id="reset-stats-btn" class="secondary-btn" title="Statistikani tozalash">
+          <span>Tarixni tozalash</span>
+        </button>
+        <button id="close-stats-btn" class="primary-btn glow-cyan">
+          <span>Yopish</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
