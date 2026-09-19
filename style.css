@@ -2324,53 +2324,58 @@ body {
     box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
   }
 
-  /* Single-Row Compact Header */
+  /* Mobile Header - Stacked Layout */
   .game-header {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     width: 100%;
     gap: 0.35rem;
     padding-bottom: 0.1rem;
   }
 
   .brand {
-    text-align: left;
-    flex: 1;
-    min-width: 0;
+    text-align: center;
+    width: 100%;
   }
 
   .brand .logo-text {
-    font-size: clamp(1.05rem, 4.2vw, 1.25rem);
-    letter-spacing: 1.2px;
-    line-height: 1.05;
+    font-size: clamp(1.1rem, 4.5vw, 1.3rem);
+    letter-spacing: 1.5px;
+    line-height: 1.1;
     white-space: nowrap;
   }
 
   .brand .subtitle {
-    font-size: 0.52rem;
-    letter-spacing: 1px;
+    font-size: 0.54rem;
+    letter-spacing: 1.2px;
     margin-top: 1px;
     white-space: nowrap;
-    opacity: 0.8;
+    opacity: 0.85;
   }
 
   .header-controls {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 4px;
-    flex-shrink: 0;
+    width: 100%;
+    max-width: 320px;
     background: rgba(10, 14, 26, 0.75);
     border: 1px solid var(--border-glass);
     border-radius: 14px;
     padding: 3px 6px;
+    box-sizing: border-box;
+    margin: 0 auto;
   }
 
   .controls-group {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 3px;
+    flex-shrink: 0;
   }
 
   .controls-divider {
@@ -2378,6 +2383,7 @@ body {
     height: 20px;
     background: rgba(255, 255, 255, 0.15);
     margin: 0 2px;
+    flex-shrink: 0;
   }
 
   .icon-btn {
@@ -2887,6 +2893,8 @@ body {
   .icon-btn {
     width: 29px;
     height: 29px;
+    min-width: 29px;
+    min-height: 29px;
   }
 
   .icon-btn svg {
