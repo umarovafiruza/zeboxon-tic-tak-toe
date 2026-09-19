@@ -452,11 +452,21 @@
     achievements: {}
   };
 
-  // Power-up DOM Elements
+  // Power-up DOM Elements (Dock & Fallback)
+  const activeBombBtn = document.getElementById('active-bomb-btn');
+  const activeSkipBtn = document.getElementById('active-skip-btn');
+  const bombStatusBadge = document.getElementById('bomb-status-badge');
+  const skipStatusBadge = document.getElementById('skip-status-badge');
+  const powerActiveName = document.getElementById('power-active-name');
+
   const bombXBtn = document.getElementById('bomb-x-btn');
   const skipXBtn = document.getElementById('skip-x-btn');
   const bombOBtn = document.getElementById('bomb-o-btn');
   const skipOBtn = document.getElementById('skip-o-btn');
+
+  // Player Display Elements
+  const playerXNameDisplay = document.getElementById('player-x-name-display');
+  const playerONameDisplay = document.getElementById('player-o-name-display');
 
   // Stats DOM Elements
   const statsModalBtn = document.getElementById('stats-modal-btn');
@@ -599,9 +609,11 @@
   // --- Helper Functions ---
   function getPlayerName(player) {
     if (player === 'X') {
-      return playerXNameInput.value.trim() || "O'yinchi 1";
+      const disp = playerXNameDisplay ? playerXNameDisplay.textContent.trim() : '';
+      return disp || (playerXNameInput ? playerXNameInput.value.trim() : '') || "O'yinchi 1";
     }
-    return playerONameInput.value.trim() || "O'yinchi 2";
+    const disp = playerONameDisplay ? playerONameDisplay.textContent.trim() : '';
+    return disp || (playerONameInput ? playerONameInput.value.trim() : '') || (gameMode === 'ai' ? 'AI Bot' : "O'yinchi 2");
   }
 
   function updateActivePlayerUI() {
@@ -755,7 +767,7 @@
       board[index] = null;
       cell.innerHTML = '';
       cell.className = 'cell';
-    }, 320);
+    }, 280);
   }
 
   function updateGhostIndicators() {
@@ -766,17 +778,60 @@
       const oldestX = historyX[0];
       if (cells[oldestX] && board[oldestX] === 'X') {
         cells[oldestX].classList.add('ghost-fade');
+        if (bannerText && isGameActive) {
+          bannerText.textContent = `${getPlayerName('X')}: ⚠️ Keyingi yurishingizda 1-belgingiz g'oyib bo'ladi!`;
+        }
       }
     } else if (currentPlayer === 'O' && historyO.length >= 3) {
       const oldestO = historyO[0];
       if (cells[oldestO] && board[oldestO] === 'O') {
         cells[oldestO].classList.add('ghost-fade');
+        if (bannerText && isGameActive && gameMode !== 'ai') {
+          bannerText.textContent = `${getPlayerName('O')}: ⚠️ Keyingi yurishingizda 1-belgingiz g'oyib bo'ladi!`;
+        }
       }
     }
   }
 
   // --- Power-ups Engine ---
   function updatePowerUpUI() {
+    const currentName = getPlayerName(currentPlayer);
+    if (powerActiveName) {
+      powerActiveName.textContent = currentName;
+    }
+
+    const hasBomb = powerUps[currentPlayer].bomb;
+    const hasSkip = powerUps[currentPlayer].skip;
+
+    // Power-ups Dock
+    if (activeBombBtn) {
+      activeBombBtn.classList.toggle('used', !hasBomb);
+      activeBombBtn.classList.toggle('active-power', isBombMode);
+    }
+    if (bombStatusBadge) {
+      bombStatusBadge.textContent = isBombMode ? 'Faol!' : (hasBomb ? '1x' : '0x');
+    }
+
+    if (activeSkipBtn) {
+      activeSkipBtn.classList.toggle('used', !hasSkip);
+    }
+    if (skipStatusBadge) {
+      skipStatusBadge.textContent = hasSkip ? '1x' : '0x';
+    }
+
+    // Hide or dim dock for AI turn
+    const dockEl = document.getElementById('powerups-dock');
+    if (dockEl) {
+      if (gameMode === 'ai' && currentPlayer === 'O') {
+        dockEl.style.opacity = '0.35';
+        dockEl.style.pointerEvents = 'none';
+      } else {
+        dockEl.style.opacity = '1';
+        dockEl.style.pointerEvents = 'auto';
+      }
+    }
+
+    // Fallback buttons
     if (bombXBtn) {
       bombXBtn.classList.toggle('used', !powerUps.X.bomb);
       bombXBtn.classList.toggle('active-power', isBombMode && currentPlayer === 'X');
@@ -792,7 +847,7 @@
       skipOBtn.classList.toggle('used', !powerUps.O.skip);
     }
 
-    // Targetable cells
+    // Targetable cells during Bomb mode
     cells.forEach((cell, idx) => {
       cell.classList.remove('bomb-targetable');
       if (isBombMode && isGameActive) {
@@ -817,7 +872,7 @@
     isBombMode = !isBombMode;
     if (isBombMode) {
       bannerIcon.textContent = '💣';
-      bannerText.textContent = `${getPlayerName(player)}: Portlatmoqchi bo'lgan raqib katagini bosing!`;
+      bannerText.textContent = `${getPlayerName(player)}: Portlatmoqchi bo'lgan raqib katagini bosing! (Bekor qilish uchun qayta bosing)`;
     } else {
       updateActivePlayerUI();
     }
@@ -880,6 +935,13 @@
       const opponent = currentPlayer === 'X' ? 'O' : 'X';
       if (board[index] === opponent) {
         handleBombExplode(index);
+      } else {
+        // Tapped own cell or empty cell: cancel bomb mode cleanly
+        isBombMode = false;
+        soundFX.playClick();
+        bannerText.textContent = "Bomba bekor qilindi. O'z yurishingizni qiling.";
+        updatePowerUpUI();
+        updateActivePlayerUI();
       }
       return;
     }
@@ -984,6 +1046,23 @@
     return available[Math.floor(Math.random() * available.length)];
   }
 
+  function simulateInfiniteWin(player, moveIdx) {
+    const queue = player === 'X' ? [...historyX] : [...historyO];
+    const b = [...board];
+    b[moveIdx] = player;
+    queue.push(moveIdx);
+    if (queue.length > 3) {
+      const rem = queue.shift();
+      b[rem] = null;
+    }
+    for (const combo of WINNING_COMBOS) {
+      if (b[combo[0]] === player && b[combo[1]] === player && b[combo[2]] === player) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   function getBestMoveMinimax() {
     let bestScore = -Infinity;
     let bestMove = null;
@@ -997,6 +1076,32 @@
     if (available.length === 9) return 4; // Center
     if (available.length === 8 && board[4] === null) return 4; // Grab center if empty
 
+    // In Disappearing (Infinite) Mode:
+    if (isInfiniteEnabled) {
+      // Tactical check 1: Can AI win immediately with vanishing logic?
+      for (let i = 0; i < available.length; i++) {
+        const idx = available[i];
+        if (simulateInfiniteWin('O', idx)) {
+          return idx;
+        }
+      }
+
+      // Tactical check 2: Can human win on next move? Block them!
+      for (let i = 0; i < available.length; i++) {
+        const idx = available[i];
+        if (simulateInfiniteWin('X', idx)) {
+          return idx;
+        }
+      }
+
+      // Tactical check 3: Prioritize center, then corners
+      if (board[4] === null) return 4;
+      const corners = [0, 2, 6, 8].filter(c => board[c] === null);
+      if (corners.length > 0) return corners[Math.floor(Math.random() * corners.length)];
+      return getRandomMove();
+    }
+
+    // Classic Minimax Mode:
     // Direct tactical check 1: Can AI win immediately?
     for (let i = 0; i < available.length; i++) {
       const idx = available[i];
@@ -1506,10 +1611,46 @@
   });
 
   // --- Power-ups Event Listeners ---
+  if (activeBombBtn) {
+    activeBombBtn.addEventListener('click', () => activateBomb(currentPlayer));
+  }
+  if (activeSkipBtn) {
+    activeSkipBtn.addEventListener('click', () => activateSkip(currentPlayer));
+  }
+
+  // Fallback listeners for individual player buttons
   if (bombXBtn) bombXBtn.addEventListener('click', () => activateBomb('X'));
   if (skipXBtn) skipXBtn.addEventListener('click', () => activateSkip('X'));
   if (bombOBtn) bombOBtn.addEventListener('click', () => activateBomb('O'));
   if (skipOBtn) skipOBtn.addEventListener('click', () => activateSkip('O'));
+
+  // Mobile player name edit handlers (Click-to-rename)
+  function setupNameEditor(displayEl, inputEl, playerKey) {
+    if (!displayEl) return;
+    displayEl.addEventListener('click', () => {
+      soundFX.playClick();
+      const current = displayEl.textContent.trim();
+      const promptTitle = playerKey === 'X' ? "1-O'yinchi ismini kiriting:" : "2-O'yinchi ismini kiriting:";
+      const newName = window.prompt(promptTitle, current);
+      if (newName !== null && newName.trim() !== '') {
+        const clean = newName.trim().substring(0, 12);
+        displayEl.textContent = clean;
+        if (inputEl) inputEl.value = clean;
+        updateActivePlayerUI();
+      }
+    });
+  }
+  setupNameEditor(playerXNameDisplay, playerXNameInput, 'X');
+  setupNameEditor(playerONameDisplay, playerONameInput, 'O');
+
+  // One-time mobile audio unlock on first touch/click
+  const unlockAudio = () => {
+    soundFX.init();
+    window.removeEventListener('touchstart', unlockAudio);
+    window.removeEventListener('pointerdown', unlockAudio);
+  };
+  window.addEventListener('touchstart', unlockAudio, { passive: true });
+  window.addEventListener('pointerdown', unlockAudio, { passive: true });
 
   // --- Stats & Achievements Engine ---
   const LOCAL_STORAGE_KEY = 'x0_arena_stats_v1';

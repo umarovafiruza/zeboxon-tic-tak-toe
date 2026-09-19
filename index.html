@@ -68,43 +68,44 @@
       </div>
     </header>
 
-    <!-- Mode & Difficulty Switcher -->
+    <!-- Mode & Settings Toolbar (Mobile Optimized) -->
     <section class="game-modes-section">
-      <!-- Opponent Mode Selector -->
-      <div class="mode-toggle-group" title="Raqibni tanlang">
-        <button class="mode-btn active" id="mode-pvp-btn">
-          <span class="mode-icon">👥</span>
-          <span>2 O'yinchi</span>
-        </button>
-        <button class="mode-btn" id="mode-ai-btn">
-          <span class="mode-icon">🤖</span>
-          <span>AI Bot</span>
-        </button>
+      <!-- Row 1: Opponent Selection & AI Difficulty Level -->
+      <div class="modes-row primary-modes-row">
+        <div class="mode-toggle-group opponent-toggle-group">
+          <button class="mode-btn active" id="mode-pvp-btn" title="2 kishi bitta telefonda o'ynash">
+            <span class="mode-icon">👥</span>
+            <span>2 O'yinchi</span>
+          </button>
+          <button class="mode-btn" id="mode-ai-btn" title="Sun'iy intellekt bot bilan o'ynash">
+            <span class="mode-icon">🤖</span>
+            <span>AI Bot</span>
+          </button>
+        </div>
+
+        <!-- AI Difficulty (Pill buttons next to AI) -->
+        <div class="difficulty-group hidden" id="difficulty-group">
+          <button class="diff-btn active" data-diff="easy" id="diff-easy-btn" title="Yangi o'yinchilar uchun">🟢 Oson</button>
+          <button class="diff-btn" data-diff="hard" id="diff-hard-btn" title="Minimax yengilmas AI">🔴 Yengilmas</button>
+        </div>
       </div>
 
-      <!-- Difficulty Selector (Only visible in AI mode) -->
-      <div class="difficulty-group hidden" id="difficulty-group">
-        <button class="diff-btn active" data-diff="easy" id="diff-easy-btn">🟢 Oson</button>
-        <button class="diff-btn" data-diff="hard" id="diff-hard-btn">🔴 Yengilmas</button>
-      </div>
+      <!-- Row 2: Game Style (Klassik vs G'oyib bo'lish) and Blitz Timer -->
+      <div class="modes-row rules-modifiers-row">
+        <div class="mode-toggle-group rule-toggle-group">
+          <button class="mode-btn active" id="rule-classic-btn" title="Klassik 3x3 Tic Tac Toe">
+            <span class="mode-icon">⚔️</span>
+            <span>Klassik</span>
+          </button>
+          <button class="mode-btn" id="rule-infinite-btn" title="Doskada har o'yinchida ko'pi bilan 3 ta belgi turadi, 4-belgida 1-si o'chadi!">
+            <span class="mode-icon">🔥</span>
+            <span>G'oyib bo'lish</span>
+          </button>
+        </div>
 
-      <!-- Game Rule Selector (Classic vs Infinite Disappearing) -->
-      <div class="mode-toggle-group rule-toggle-group" title="O'yin qoidasini tanlang">
-        <button class="mode-btn active" id="rule-classic-btn" title="Klassik 3x3 Tic Tac Toe">
-          <span class="mode-icon">⚔️</span>
-          <span>Klassik</span>
-        </button>
-        <button class="mode-btn" id="rule-infinite-btn" title="G'oyib bo'luvchi rejim (Doskada eng ko'pi bilan 3 ta belgi!)">
-          <span class="mode-icon">🔥</span>
-          <span>G'oyib bo'luvchi</span>
-        </button>
-      </div>
-
-      <!-- Speed Modifier (Blitz Timer) -->
-      <div class="modifiers-bar">
-        <button class="modifier-btn" id="toggle-blitz-btn" title="Har bir yurishga 5 soniya beriladi">
+        <button class="modifier-btn" id="toggle-blitz-btn" title="Har bir yurishga 5 soniya vaqt beriladi">
           <span class="mod-icon">⏱️</span>
-          <span class="mod-text">Blitz Taymer (5s)</span>
+          <span class="mod-text">Blitz (5s)</span>
           <span class="mod-status" id="blitz-status">OFF</span>
         </button>
       </div>
@@ -136,21 +137,13 @@
         </div>
         <div class="player-details">
           <div class="player-name-wrapper">
-            <input type="text" id="player-x-name" class="player-name-input" value="O'yinchi 1" maxlength="12" title="Ismni o'zgartirish uchun bosing">
+            <span class="player-name-text" id="player-x-name-display" title="Ismni o'zgartirish">O'yinchi 1</span>
+            <input type="text" id="player-x-name" class="player-name-input hidden" value="O'yinchi 1" maxlength="12">
             <span class="symbol-tag tag-x">X</span>
           </div>
           <div class="turn-status">Navbatda</div>
         </div>
         <div class="player-score" id="score-x">0</div>
-        <!-- Power-ups for Player X -->
-        <div class="player-powerups">
-          <button class="powerup-btn" id="bomb-x-btn" title="Bomba: Raqib katagini portlatish (1 marta)">
-            <span>💣</span>
-          </button>
-          <button class="powerup-btn" id="skip-x-btn" title="Bloklash: Raqib navbatini o'tkazib yuborish (1 marta)">
-            <span>🛑</span>
-          </button>
-        </div>
       </div>
 
       <!-- VS / Draws center badge -->
@@ -170,23 +163,36 @@
         </div>
         <div class="player-details">
           <div class="player-name-wrapper">
-            <input type="text" id="player-o-name" class="player-name-input" value="O'yinchi 2" maxlength="12" title="Ismni o'zgartirish uchun bosing">
+            <span class="player-name-text" id="player-o-name-display" title="Ismni o'zgartirish">O'yinchi 2</span>
+            <input type="text" id="player-o-name" class="player-name-input hidden" value="O'yinchi 2" maxlength="12">
             <span class="symbol-tag tag-o">O</span>
           </div>
           <div class="turn-status">Kutmoqda</div>
         </div>
         <div class="player-score" id="score-o">0</div>
-        <!-- Power-ups for Player O -->
-        <div class="player-powerups">
-          <button class="powerup-btn" id="bomb-o-btn" title="Bomba: Raqib katagini portlatish (1 marta)">
-            <span>💣</span>
-          </button>
-          <button class="powerup-btn" id="skip-o-btn" title="Bloklash: Raqib navbatini o'tkazib yuborish (1 marta)">
-            <span>🛑</span>
-          </button>
-        </div>
       </div>
     </section>
+
+    <!-- Dedicated Modern Power-ups Dock -->
+    <div class="powerups-dock" id="powerups-dock">
+      <div class="powerups-dock-header">
+        <span class="power-sparkle">⚡</span>
+        <span class="power-title"><strong id="power-active-name">O'yinchi 1</strong> maxsus kuchlari:</span>
+      </div>
+      <div class="powerups-buttons-row">
+        <button class="powerup-btn" id="active-bomb-btn" title="Bomba: Raqib belgisini doskadan yo'q qilish">
+          <span class="power-icon">💣</span>
+          <span class="power-label">Bomba</span>
+          <span class="power-badge" id="bomb-status-badge">1x</span>
+        </button>
+        <button class="powerup-btn" id="active-skip-btn" title="Bloklash: Raqib navbatini o'tkazib yuborish">
+          <span class="power-icon">🛑</span>
+          <span class="power-label">Bloklash</span>
+          <span class="power-badge" id="skip-status-badge">1x</span>
+        </button>
+      </div>
+    </div>
+
 
     <!-- Blitz Countdown Bar (Only active when blitz is enabled) -->
     <div class="blitz-timer-container hidden" id="blitz-timer-container">
@@ -202,7 +208,9 @@
     <!-- Infinite Mode Indicator Banner -->
     <div class="infinite-mode-banner hidden" id="infinite-mode-banner">
       <span class="banner-fire-icon">🔥</span>
-      <span><strong>G'oyib bo'luvchi rejim faol:</strong> Doskada har bir o'yinchida ko'pi bilan 3 ta belgi tura oladi. 4-belgi qo'yilganda, 1-belgi avtomatik o'chadi!</span>
+      <div class="banner-text-wrap">
+        <strong>G'oyib bo'lish rejimi faol:</strong> Har bir o'yinchida ko'pi bilan 3 ta belgi turadi. 4-belgida 1-si avtomatik o'chadi!
+      </div>
     </div>
 
     <!-- Game Arena (Board) -->
