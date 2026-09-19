@@ -5,6 +5,43 @@
 (function () {
   'use strict';
 
+  // --- Mobile Haptic Engine ---
+  function triggerHaptic(type = 'tap') {
+    if (typeof navigator === 'undefined' || !navigator.vibrate) return;
+    try {
+      switch (type) {
+        case 'light':
+        case 'tap':
+          navigator.vibrate(15);
+          break;
+        case 'move':
+          navigator.vibrate(22);
+          break;
+        case 'win':
+          navigator.vibrate([45, 60, 45, 60, 90]);
+          break;
+        case 'draw':
+          navigator.vibrate([30, 40, 30]);
+          break;
+        case 'bomb':
+        case 'explosion':
+          navigator.vibrate([60, 40, 90]);
+          break;
+        case 'block':
+        case 'skip':
+          navigator.vibrate([35, 45, 35]);
+          break;
+        case 'danger':
+          navigator.vibrate(40);
+          break;
+        default:
+          navigator.vibrate(20);
+      }
+    } catch (e) {
+      // Ignored if vibration is disabled or blocked
+    }
+  }
+
   // --- Sound Effects Generator (Web Audio API) ---
   class SoundFX {
     constructor() {
@@ -76,6 +113,7 @@
     }
 
     playRoundWin() {
+      triggerHaptic('win');
       if (!this.enabled) return;
       this.init();
       if (!this.ctx) return;
@@ -101,6 +139,7 @@
     }
 
     playDraw() {
+      triggerHaptic('draw');
       if (!this.enabled) return;
       this.init();
       if (!this.ctx) return;
@@ -253,6 +292,7 @@
     }
 
     playExplosion() {
+      triggerHaptic('bomb');
       if (!this.enabled) return;
       this.init();
       if (!this.ctx) return;
@@ -276,6 +316,7 @@
     }
 
     playBlock() {
+      triggerHaptic('block');
       if (!this.enabled) return;
       this.init();
       if (!this.ctx) return;
