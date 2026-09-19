@@ -650,6 +650,18 @@
     });
   }
 
+  // --- Mobile Tactile Haptic Vibration ---
+  function triggerHaptic(type = 'light') {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        if (type === 'light') navigator.vibrate(15);
+        else if (type === 'medium') navigator.vibrate(35);
+        else if (type === 'heavy') navigator.vibrate([40, 30, 40]);
+        else if (type === 'win') navigator.vibrate([80, 40, 80, 40, 120]);
+      } catch (e) {}
+    }
+  }
+
   // --- Dynamic Strike Line Positioner ---
   function drawStrikeLine(combo, winner) {
     const firstCell = cells[combo[0]];
@@ -664,19 +676,24 @@
     const x2 = lastRect.left + lastRect.width / 2 - boardRect.left;
     const y2 = lastRect.top + lastRect.height / 2 - boardRect.top;
 
-    const distance = Math.hypot(x2 - x1, y2 - y1) + 20; // add slight padding
-    const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+    const rad = Math.atan2(y2 - y1, x2 - x1);
+    const angle = rad * (180 / Math.PI);
+    const dist = Math.hypot(x2 - x1, y2 - y1);
+    const pad = 18; // extend symmetrically on both sides
+    const startX = x1 - Math.cos(rad) * pad;
+    const startY = y1 - Math.sin(rad) * pad;
+    const totalDist = dist + pad * 2;
 
     strikeLineEl.className = 'strike-line' + (winner === 'O' ? ' pink-line' : '');
-    strikeLineEl.style.top = `${y1}px`;
-    strikeLineEl.style.left = `${x1}px`;
+    strikeLineEl.style.top = `${startY}px`;
+    strikeLineEl.style.left = `${startX}px`;
     strikeLineEl.style.transform = `translate(0, -50%) rotate(${angle}deg)`;
     strikeLineEl.style.opacity = '1';
     strikeLineEl.style.width = '0px';
 
     // Trigger animation
     requestAnimationFrame(() => {
-      strikeLineEl.style.width = `${distance}px`;
+      strikeLineEl.style.width = `${totalDist}px`;
     });
   }
 
@@ -819,9 +836,10 @@
       skipStatusBadge.textContent = hasSkip ? '1x' : '0x';
     }
 
-    // Hide or dim dock for AI turn
+    // Hide or dim dock for AI turn & update bomb-active state
     const dockEl = document.getElementById('powerups-dock');
     if (dockEl) {
+      dockEl.classList.toggle('bomb-active', isBombMode);
       if (gameMode === 'ai' && currentPlayer === 'O') {
         dockEl.style.opacity = '0.35';
         dockEl.style.pointerEvents = 'none';
@@ -883,6 +901,7 @@
     if (currentPlayer !== player || !isGameActive || !powerUps[player].skip) return;
     powerUps[player].skip = false;
     soundFX.playBlock();
+    triggerHaptic('medium');
     bannerIcon.textContent = '🛑';
     bannerText.textContent = `${getPlayerName(player)} raqib yurishini blokladi! Qayta sizning navbatingiz!`;
 
@@ -895,6 +914,7 @@
     cell.classList.remove('bomb-targetable');
     cell.classList.add('exploded');
     soundFX.playExplosion();
+    triggerHaptic('heavy');
 
     board[index] = null;
     if (isInfiniteEnabled) {
@@ -954,6 +974,7 @@
 
   function executeMove(index) {
     stopBlitzTimer();
+    triggerHaptic('light');
 
     const cell = cells[index];
     board[index] = currentPlayer;
@@ -1208,6 +1229,7 @@
 
     drawStrikeLine(combo, winner);
     soundFX.playRoundWin();
+    triggerHaptic('win');
     confetti.fire(1800, 80);
 
     // Update score elements
@@ -1414,6 +1436,7 @@
     modePvpBtn.classList.add('active');
     modeAiBtn.classList.remove('active');
     difficultyGroup.classList.add('hidden');
+    if (playerONameDisplay) playerONameDisplay.textContent = "O'yinchi 2";
     playerONameInput.value = "O'yinchi 2";
     playerONameInput.disabled = false;
     resetEntireMatch();
@@ -1426,7 +1449,8 @@
     modeAiBtn.classList.add('active');
     modePvpBtn.classList.remove('active');
     difficultyGroup.classList.remove('hidden');
-    playerONameInput.value = "AI Bot 🤖";
+    if (playerONameDisplay) playerONameDisplay.textContent = "AI Bot";
+    playerONameInput.value = "AI Bot";
     playerONameInput.disabled = true;
     resetEntireMatch();
   });
@@ -1624,24 +1648,92 @@
   if (bombOBtn) bombOBtn.addEventListener('click', () => activateBomb('O'));
   if (skipOBtn) skipOBtn.addEventListener('click', () => activateSkip('O'));
 
-  // Mobile player name edit handlers (Click-to-rename)
-  function setupNameEditor(displayEl, inputEl, playerKey) {
-    if (!displayEl) return;
-    displayEl.addEventListener('click', () => {
-      soundFX.playClick();
-      const current = displayEl.textContent.trim();
-      const promptTitle = playerKey === 'X' ? "1-O'yinchi ismini kiriting:" : "2-O'yinchi ismini kiriting:";
-      const newName = window.prompt(promptTitle, current);
-      if (newName !== null && newName.trim() !== '') {
-        const clean = newName.trim().substring(0, 12);
-        displayEl.textContent = clean;
-        if (inputEl) inputEl.value = clean;
-        updateActivePlayerUI();
+  // --- In-game Rename Modal Logic (Mobile Optimized) ---
+  const renameModal = document.getElementById('rename-modal');
+  const renameModalTitle = document.getElementById('rename-modal-title');
+  const renameModalDesc = document.getElementById('rename-modal-desc');
+  const renameModalInput = document.getElementById('rename-modal-input');
+  const saveRenameBtn = document.getElementById('save-rename-btn');
+  const cancelRenameBtn = document.getElementById('cancel-rename-btn');
+  let renamingPlayerKey = null;
+
+  function openRenameModal(playerKey) {
+    if (gameMode === 'ai' && playerKey === 'O') return;
+    renamingPlayerKey = playerKey;
+    const currentName = playerKey === 'X' ? getPlayerName('X') : getPlayerName('O');
+    if (renameModalTitle) {
+      renameModalTitle.textContent = playerKey === 'X' ? "1-O'yinchi (X) Ismi" : "2-O'yinchi (O) Ismi";
+    }
+    if (renameModalDesc) {
+      renameModalDesc.textContent = "Yangi ismni kiriting (maksimal 12 harf):";
+    }
+    if (renameModalInput) {
+      renameModalInput.value = currentName;
+      setTimeout(() => {
+        renameModalInput.focus();
+        renameModalInput.select();
+      }, 100);
+    }
+    soundFX.playClick();
+    triggerHaptic('light');
+    if (renameModal) renameModal.classList.remove('hidden');
+  }
+
+  function closeRenameModal() {
+    if (renameModal) renameModal.classList.add('hidden');
+    renamingPlayerKey = null;
+  }
+
+  function savePlayerRename() {
+    if (!renamingPlayerKey || !renameModalInput) return;
+    const raw = renameModalInput.value.trim();
+    const fallback = renamingPlayerKey === 'X' ? "O'yinchi 1" : (gameMode === 'ai' ? "AI Bot" : "O'yinchi 2");
+    const clean = (raw || fallback).substring(0, 12);
+
+    if (renamingPlayerKey === 'X') {
+      if (playerXNameDisplay) playerXNameDisplay.textContent = clean;
+      if (playerXNameInput) playerXNameInput.value = clean;
+    } else {
+      if (playerONameDisplay) playerONameDisplay.textContent = clean;
+      if (playerONameInput) playerONameInput.value = clean;
+    }
+
+    soundFX.playClick();
+    triggerHaptic('medium');
+    closeRenameModal();
+    updateActivePlayerUI();
+    updatePowerUpUI();
+  }
+
+  if (saveRenameBtn) saveRenameBtn.addEventListener('click', savePlayerRename);
+  if (cancelRenameBtn) cancelRenameBtn.addEventListener('click', () => {
+    soundFX.playClick();
+    closeRenameModal();
+  });
+  if (renameModal) {
+    renameModal.addEventListener('click', (e) => {
+      if (e.target === renameModal) {
+        soundFX.playClick();
+        closeRenameModal();
       }
     });
   }
-  setupNameEditor(playerXNameDisplay, playerXNameInput, 'X');
-  setupNameEditor(playerONameDisplay, playerONameInput, 'O');
+  if (renameModalInput) {
+    renameModalInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        savePlayerRename();
+      } else if (e.key === 'Escape') {
+        closeRenameModal();
+      }
+    });
+  }
+
+  const playerXTrigger = document.getElementById('player-x-name-trigger');
+  const playerOTrigger = document.getElementById('player-o-name-trigger');
+  if (playerXTrigger) playerXTrigger.addEventListener('click', () => openRenameModal('X'));
+  if (playerOTrigger) playerOTrigger.addEventListener('click', () => openRenameModal('O'));
+  if (playerXNameDisplay) playerXNameDisplay.addEventListener('click', () => openRenameModal('X'));
+  if (playerONameDisplay) playerONameDisplay.addEventListener('click', () => openRenameModal('O'));
 
   // One-time mobile audio unlock on first touch/click
   const unlockAudio = () => {

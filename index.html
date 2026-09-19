@@ -136,8 +136,9 @@
           </svg>
         </div>
         <div class="player-details">
-          <div class="player-name-wrapper">
-            <span class="player-name-text" id="player-x-name-display" title="Ismni o'zgartirish">O'yinchi 1</span>
+          <div class="player-name-wrapper" id="player-x-name-trigger" title="Ismni o'zgartirish">
+            <span class="player-name-text" id="player-x-name-display">O'yinchi 1</span>
+            <span class="name-edit-icon" aria-hidden="true">✏️</span>
             <input type="text" id="player-x-name" class="player-name-input hidden" value="O'yinchi 1" maxlength="12">
             <span class="symbol-tag tag-x">X</span>
           </div>
@@ -162,8 +163,9 @@
           </svg>
         </div>
         <div class="player-details">
-          <div class="player-name-wrapper">
-            <span class="player-name-text" id="player-o-name-display" title="Ismni o'zgartirish">O'yinchi 2</span>
+          <div class="player-name-wrapper" id="player-o-name-trigger" title="Ismni o'zgartirish">
+            <span class="player-name-text" id="player-o-name-display">O'yinchi 2</span>
+            <span class="name-edit-icon" aria-hidden="true">✏️</span>
             <input type="text" id="player-o-name" class="player-name-input hidden" value="O'yinchi 2" maxlength="12">
             <span class="symbol-tag tag-o">O</span>
           </div>
@@ -178,6 +180,7 @@
       <div class="powerups-dock-header">
         <span class="power-sparkle">⚡</span>
         <span class="power-title"><strong id="power-active-name">O'yinchi 1</strong> maxsus kuchlari:</span>
+        <span class="power-cancel-hint" id="power-cancel-hint">(Bekor qilish ❌)</span>
       </div>
       <div class="powerups-buttons-row">
         <button class="powerup-btn" id="active-bomb-btn" title="Bomba: Raqib belgisini doskadan yo'q qilish">
@@ -519,6 +522,28 @@
         </button>
         <button id="close-stats-btn" class="primary-btn glow-cyan">
           <span>Yopish</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- In-game Player Rename Modal (Mobile Optimized) -->
+  <div class="modal-backdrop hidden" id="rename-modal">
+    <div class="modal-card rename-modal-card">
+      <div class="modal-glow-tag">ISMNI SOZLASH</div>
+      <h2 class="modal-title" id="rename-modal-title">O'yinchi Ismi</h2>
+      <p class="modal-desc" id="rename-modal-desc">Yangi ismni kiriting (maksimal 12 harf):</p>
+      
+      <div class="rename-input-wrap">
+        <input type="text" id="rename-modal-input" class="rename-modal-field" maxlength="12" placeholder="Ismni kiriting..." autocomplete="off">
+      </div>
+
+      <div class="modal-actions-row">
+        <button id="cancel-rename-btn" class="secondary-btn" type="button">
+          <span>Bekor qilish</span>
+        </button>
+        <button id="save-rename-btn" class="primary-btn glow-cyan" type="button">
+          <span>Saqlash ✨</span>
         </button>
       </div>
     </div>
