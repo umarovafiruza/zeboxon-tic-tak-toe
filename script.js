@@ -6,7 +6,7 @@
   'use strict';
 
   // --- Mobile Haptic Engine ---
-  function triggerHaptic(type = 'tap') {
+  function triggerHaptic(type = 'light') {
     if (typeof navigator === 'undefined' || !navigator.vibrate) return;
     try {
       switch (type) {
@@ -16,6 +16,12 @@
           break;
         case 'move':
           navigator.vibrate(22);
+          break;
+        case 'medium':
+          navigator.vibrate(35);
+          break;
+        case 'heavy':
+          navigator.vibrate([40, 30, 40]);
           break;
         case 'win':
           navigator.vibrate([45, 60, 45, 60, 90]);
@@ -703,18 +709,6 @@
         pill.classList.add('completed');
       }
     });
-  }
-
-  // --- Mobile Tactile Haptic Vibration ---
-  function triggerHaptic(type = 'light') {
-    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      try {
-        if (type === 'light') navigator.vibrate(15);
-        else if (type === 'medium') navigator.vibrate(35);
-        else if (type === 'heavy') navigator.vibrate([40, 30, 40]);
-        else if (type === 'win') navigator.vibrate([80, 40, 80, 40, 120]);
-      } catch (e) {}
-    }
   }
 
   // --- Dynamic Strike Line Positioner with Animated Draw ---
