@@ -616,6 +616,20 @@
     return disp || (playerONameInput ? playerONameInput.value.trim() : '') || (gameMode === 'ai' ? 'AI Bot' : "O'yinchi 2");
   }
 
+  function setBanner(text, icon = null) {
+    if (!bannerText) return;
+    const bannerContent = document.querySelector('.banner-content');
+    if (bannerContent) {
+      bannerContent.classList.remove('banner-animating');
+      void bannerContent.offsetWidth; // Force reflow to trigger animation
+      bannerContent.classList.add('banner-animating');
+    }
+    if (icon && bannerIcon) {
+      bannerIcon.textContent = icon;
+    }
+    bannerText.textContent = text;
+  }
+
   function updateActivePlayerUI() {
     const set = SYMBOL_SETS[currentSymbolSet];
     const symbolX = set.x;
@@ -626,15 +640,15 @@
       playerOCard.classList.remove('active-turn');
       playerXCard.querySelector('.turn-status').textContent = 'Navbatda';
       playerOCard.querySelector('.turn-status').textContent = 'Kutmoqda';
-      bannerIcon.textContent = set.type === 'emoji' ? symbolX : '⚡';
-      bannerText.textContent = `${getPlayerName('X')} (${symbolX}) ning navbati!`;
+      const icon = set.type === 'emoji' ? symbolX : '⚡';
+      setBanner(`${getPlayerName('X')} (${symbolX}) ning navbati!`, icon);
     } else {
       playerOCard.classList.add('active-turn');
       playerXCard.classList.remove('active-turn');
       playerOCard.querySelector('.turn-status').textContent = 'Navbatda';
       playerXCard.querySelector('.turn-status').textContent = 'Kutmoqda';
-      bannerIcon.textContent = set.type === 'emoji' ? symbolO : '🌸';
-      bannerText.textContent = `${getPlayerName('O')} (${symbolO}) ning navbati!`;
+      const icon = set.type === 'emoji' ? symbolO : '🌸';
+      setBanner(`${getPlayerName('O')} (${symbolO}) ning navbati!`, icon);
     }
   }
 
@@ -662,7 +676,7 @@
     }
   }
 
-  // --- Dynamic Strike Line Positioner ---
+  // --- Dynamic Strike Line Positioner with Animated Draw ---
   function drawStrikeLine(combo, winner) {
     const firstCell = cells[combo[0]];
     const lastCell = cells[combo[2]];
@@ -690,6 +704,9 @@
     strikeLineEl.style.transform = `translate(0, -50%) rotate(${angle}deg)`;
     strikeLineEl.style.opacity = '1';
     strikeLineEl.style.width = '0px';
+
+    // Force reflow to guarantee width transition animation triggers
+    void strikeLineEl.offsetWidth;
 
     // Trigger animation
     requestAnimationFrame(() => {
@@ -762,8 +779,7 @@
     updateActivePlayerUI();
     updateGhostIndicators();
 
-    bannerIcon.textContent = '⏰';
-    bannerText.textContent = `${getPlayerName(timedOutPlayer)} vaqti tugadi! Navbat ${getPlayerName(currentPlayer)}ga o'tdi.`;
+    setBanner(`${getPlayerName(timedOutPlayer)} vaqti tugadi! Navbat ${getPlayerName(currentPlayer)}ga o'tdi.`, '⏰');
 
     startBlitzTimer();
 
@@ -776,15 +792,20 @@
     const cell = cells[index];
     if (!cell) return;
 
-    cell.classList.remove('ghost-fade');
+    // Immediately clear logical state and classes so the cell is instantly free to be played
+    board[index] = null;
+    cell.classList.remove('ghost-fade', 'taken', 'x-cell', 'o-cell');
     cell.classList.add('vanishing');
     soundFX.playVanish();
 
     setTimeout(() => {
-      board[index] = null;
-      cell.innerHTML = '';
-      cell.className = 'cell';
-    }, 280);
+      // If the cell was not re-taken by another move in the meantime
+      if (board[index] === null) {
+        cell.innerHTML = '';
+        cell.classList.remove('vanishing');
+        cell.className = 'cell';
+      }
+    }, 250);
   }
 
   function updateGhostIndicators() {
@@ -796,7 +817,7 @@
       if (cells[oldestX] && board[oldestX] === 'X') {
         cells[oldestX].classList.add('ghost-fade');
         if (bannerText && isGameActive) {
-          bannerText.textContent = `${getPlayerName('X')}: ⚠️ Keyingi yurishingizda 1-belgingiz g'oyib bo'ladi!`;
+          setBanner(`${getPlayerName('X')}: ⚠️ Keyingi yurishingizda 1-belgingiz g'oyib bo'ladi!`, '🔥');
         }
       }
     } else if (currentPlayer === 'O' && historyO.length >= 3) {
@@ -804,7 +825,7 @@
       if (cells[oldestO] && board[oldestO] === 'O') {
         cells[oldestO].classList.add('ghost-fade');
         if (bannerText && isGameActive && gameMode !== 'ai') {
-          bannerText.textContent = `${getPlayerName('O')}: ⚠️ Keyingi yurishingizda 1-belgingiz g'oyib bo'ladi!`;
+          setBanner(`${getPlayerName('O')}: ⚠️ Keyingi yurishingizda 1-belgingiz g'oyib bo'ladi!`, '🔥');
         }
       }
     }
@@ -882,15 +903,14 @@
     const opponent = player === 'X' ? 'O' : 'X';
     const hasOpponentMark = board.some(mark => mark === opponent);
     if (!hasOpponentMark) {
-      bannerText.textContent = "Portlatish uchun raqib katagi yo'q!";
+      setBanner("Portlatish uchun raqib katagi yo'q!", '⚠️');
       return;
     }
 
     soundFX.playClick();
     isBombMode = !isBombMode;
     if (isBombMode) {
-      bannerIcon.textContent = '💣';
-      bannerText.textContent = `${getPlayerName(player)}: Portlatmoqchi bo'lgan raqib katagini bosing! (Bekor qilish uchun qayta bosing)`;
+      setBanner(`${getPlayerName(player)}: Portlatmoqchi bo'lgan raqib katagini bosing! (Bekor qilish uchun qayta bosing)`, '💣');
     } else {
       updateActivePlayerUI();
     }
@@ -902,8 +922,7 @@
     powerUps[player].skip = false;
     soundFX.playBlock();
     triggerHaptic('medium');
-    bannerIcon.textContent = '🛑';
-    bannerText.textContent = `${getPlayerName(player)} raqib yurishini blokladi! Qayta sizning navbatingiz!`;
+    setBanner(`${getPlayerName(player)} raqib yurishini blokladi! Qayta sizning navbatingiz!`, '🛑');
 
     startBlitzTimer();
     updatePowerUpUI();
@@ -959,7 +978,7 @@
         // Tapped own cell or empty cell: cancel bomb mode cleanly
         isBombMode = false;
         soundFX.playClick();
-        bannerText.textContent = "Bomba bekor qilindi. O'z yurishingizni qiling.";
+        setBanner("Bomba bekor qilindi. O'z yurishingizni qiling.");
         updatePowerUpUI();
         updateActivePlayerUI();
       }
@@ -967,7 +986,8 @@
     }
 
     if (gameMode === 'ai' && currentPlayer === 'O') return; // AI's turn, human cannot click
-    if (board[index] !== null || cell.classList.contains('vanishing')) return;
+    // Allow clicking if board[index] is null (freed cells can be clicked immediately)
+    if (board[index] !== null) return;
 
     executeMove(index);
   }
@@ -978,6 +998,7 @@
 
     const cell = cells[index];
     board[index] = currentPlayer;
+    cell.classList.remove('vanishing'); // Clear any previous vanishing state
     cell.classList.add('taken');
     cell.classList.add(currentPlayer === 'X' ? 'x-cell' : 'o-cell');
     cell.innerHTML = getSymbolContent(currentPlayer);
@@ -990,26 +1011,42 @@
     }
 
     // Infinite Mode Queue Processing:
-    // Max 3 marks per player. When 4th is placed, the oldest mark is freed immediately from logic.
+    // Max 3 marks per player. When 4th is placed, the oldest mark is freed immediately from logic and board.
     if (isInfiniteEnabled) {
       if (currentPlayer === 'X') {
         historyX.push(index);
         if (historyX.length > 3) {
           const toRemove = historyX.shift();
-          board[toRemove] = null; // Clear logic state immediately
+          console.log(`%c[G'oyib bo'lish - X] ${toRemove}-katak o'chirildi!`, 'color: #ff2a7a; font-weight: bold;', {
+            ochirilganKatak: toRemove,
+            qolganTarixX: [...historyX]
+          });
           removeCellMark(toRemove);
         }
       } else {
         historyO.push(index);
         if (historyO.length > 3) {
           const toRemove = historyO.shift();
-          board[toRemove] = null; // Clear logic state immediately
+          console.log(`%c[G'oyib bo'lish - O] ${toRemove}-katak o'chirildi!`, 'color: #ff2a7a; font-weight: bold;', {
+            ochirilganKatak: toRemove,
+            qolganTarixO: [...historyO]
+          });
           removeCellMark(toRemove);
         }
       }
     }
 
-    // Check Outcome
+    // State diagnostic logging after each move per requirement 5
+    console.log(`%c[Harakat - ${currentPlayer}] Katak: ${index}`, 'color: #00f2fe; font-weight: bold;', {
+      rejim: isInfiniteEnabled ? "G'oyib bo'luvchi (Infinite)" : "Klassik",
+      yurish: index,
+      o'yinchi: currentPlayer,
+      historyX: [...historyX],
+      historyO: [...historyO],
+      doska: [...board]
+    });
+
+    // Check Outcome on active marks
     const winCombo = checkWin(currentPlayer);
     if (winCombo) {
       handleRoundWin(currentPlayer, winCombo);
@@ -1035,8 +1072,7 @@
   function scheduleAiMove() {
     if (!isGameActive || currentPlayer !== 'O') return;
     isAiThinking = true;
-    bannerIcon.textContent = '🤖';
-    bannerText.textContent = "AI Bot o'ylamoqda...";
+    setBanner("AI Bot o'ylamoqda...", '🤖');
 
     setTimeout(() => {
       if (!isGameActive || currentPlayer !== 'O') {
@@ -1237,8 +1273,7 @@
     scoreOEl.textContent = scores.O;
 
     const winnerName = getPlayerName(winner);
-    bannerIcon.textContent = '🎉';
-    bannerText.textContent = `${winnerName} (${winner}) ushbu roundda g'alaba qozondi!`;
+    setBanner(`${winnerName} (${winner}) ushbu roundda g'alaba qozondi!`, '🎉');
 
     setTimeout(() => {
       onRoundFinished(winner);
@@ -1252,8 +1287,7 @@
     scoreDrawEl.textContent = scores.draw;
 
     soundFX.playDraw();
-    bannerIcon.textContent = '🤝';
-    bannerText.textContent = `Durang! Hech kim ball olmadi.`;
+    setBanner(`Durang! Hech kim ball olmadi.`, '🤝');
 
     setTimeout(() => {
       onRoundFinished('draw');
@@ -1500,10 +1534,12 @@
     // Clean reset of match state for seamless transition
     resetEntireMatch();
 
-    bannerIcon.textContent = isInfiniteEnabled ? '🔥' : '⚔️';
-    bannerText.textContent = isInfiniteEnabled
-      ? "G'oyib bo'luvchi rejim yoqildi! Doskada har o'yinchida ko'pi bilan 3 ta belgi turadi."
-      : "Klassik rejim faol! 3 ta ketma-ket katakni egallang.";
+    setBanner(
+      isInfiniteEnabled
+        ? "G'oyib bo'luvchi rejim yoqildi! Doskada har o'yinchida ko'pi bilan 3 ta belgi turadi."
+        : "Klassik rejim faol! 3 ta ketma-ket katakni egallang.",
+      isInfiniteEnabled ? '🔥' : '⚔️'
+    );
   }
 
   if (ruleClassicBtn) {
